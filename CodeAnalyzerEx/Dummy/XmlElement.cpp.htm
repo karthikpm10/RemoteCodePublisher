@@ -1,0 +1,368 @@
+<!----------------------------------------------------------------------------
+   XmlElement.cpp.htm  -Published HTML File
+   Published on : 2017-05-02.23:30:41
+   Author:Karthik Palepally Muniyappa  
+----------------------------------------------------------------------------->
+<html>
+<head>
+<link rel="stylesheet" href="../CSS/style.css">
+</head>
+<body>
+<h3>XmlElement.cpp</h3>
+<hr />
+<div class="indent">
+<h4>Dependencies:</h4>
+<ul>
+<li><a href="XmlElement.h.htm">XmlElement.h</a></li>
+</ul>
+</div>
+<hr />
+<pre>
+/////////////////////////////////////////////////////////////////// 
+// XmlElement.cpp - define XML Element types                     // 
+// ver 1.7                                                       // 
+// Application: Help for CSE687 Pr#2, Spring 2015                // 
+// Platform:    Dell XPS 2720, Win 8.1 Pro, Visual Studio 2013   // 
+// Author:      Jim Fawcett, CST 4-187, 443-3948                 // 
+//              jfawcett@twcny.rr.com                            // 
+/////////////////////////////////////////////////////////////////// 
+#include "XmlElement.h" 
+#include &lt;iostream&gt; 
+using namespace XmlProcessing; 
+size_t AbstractXmlElement::count = 0; 
+size_t AbstractXmlElement::tabSize = 2; 
+////////////////////////////////////////////////////////////////////////// 
+// Global Factory methods 
+//----&lt; factory for doc elements &gt;---------------------------------------- 
+std::shared_ptr&lt;AbstractXmlElement&gt; XmlProcessing::makeDocElement(std::shared_ptr&lt;AbstractXmlElement&gt; pRoot) 
+{<button onclick="myFunction(this)" id="button76">-</button><pre class="showElem" id="button76_pre"> 
+  std::shared_ptr&lt;AbstractXmlElement&gt; ptr(new DocElement(pRoot)); 
+  return ptr; 
+</pre>} 
+//----&lt; factory for tagged elements &gt;---------------------------------------- 
+std::shared_ptr&lt;AbstractXmlElement&gt; XmlProcessing::makeTaggedElement(const std::string& tag) 
+{<button onclick="myFunction(this)" id="button77">-</button><pre class="showElem" id="button77_pre"> 
+  std::shared_ptr&lt;AbstractXmlElement&gt; ptr(new TaggedElement(tag)); 
+  return ptr; 
+</pre>} 
+//----&lt; factory for text elements &gt;------------------------------------------ 
+std::shared_ptr&lt;AbstractXmlElement&gt; XmlProcessing::makeTextElement(const std::string& text) 
+{<button onclick="myFunction(this)" id="button78">-</button><pre class="showElem" id="button78_pre"> 
+  std::shared_ptr&lt;AbstractXmlElement&gt; ptr(new TextElement(text)); 
+  return ptr; 
+</pre>} 
+//----&lt; factory for comment elements &gt;--------------------------------------- 
+std::shared_ptr&lt;AbstractXmlElement&gt; XmlProcessing::makeCommentElement(const std::string& text) 
+{<button onclick="myFunction(this)" id="button79">-</button><pre class="showElem" id="button79_pre"> 
+  std::shared_ptr&lt;AbstractXmlElement&gt; ptr(new CommentElement(text)); 
+  return ptr; 
+</pre>} 
+//----&lt; factory for processing instruction elements &gt;------------------------ 
+std::shared_ptr&lt;AbstractXmlElement&gt; XmlProcessing::makeProcInstrElement(const std::string& text) 
+{<button onclick="myFunction(this)" id="button80">-</button><pre class="showElem" id="button80_pre"> 
+  std::shared_ptr&lt;AbstractXmlElement&gt; ptr(new ProcInstrElement(text)); 
+  return ptr; 
+</pre>} 
+//----&lt; factory for XML Declaration elements &gt;------------------------------- 
+std::shared_ptr&lt;AbstractXmlElement&gt; XmlProcessing::makeXmlDeclarElement() 
+{<button onclick="myFunction(this)" id="button81">-</button><pre class="showElem" id="button81_pre"> 
+  std::shared_ptr&lt;AbstractXmlElement&gt; ptr(new XmlDeclarElement()); 
+  return ptr; 
+</pre>} 
+///////////////////////////////////////////////////////////////////////////// 
+// Derived class method definitions 
+// 
+// DocElement methods 
+//----&lt; doc element constructor and destructor &gt;----------------------------- 
+DocElement::DocElement(std::shared_ptr&lt;AbstractXmlElement&gt; pRoot)  
+{<button onclick="myFunction(this)" id="button82">-</button><pre class="showElem" id="button82_pre"> 
+  //std::shared_ptr&lt;AbstractXmlElement&gt; pDecl = makeXmlDeclarElement(); 
+  //pDecl-&gt;addAttrib("version", "1.0"); 
+  //children_.push_back(pDecl); 
+  if (pRoot != nullptr) 
+    children_.push_back(pRoot); 
+</pre>} 
+//----&lt; private helper for DocElement::addChild(...) &gt;----------------------- 
+bool DocElement::hasXmlRoot() 
+{<button onclick="myFunction(this)" id="button83">-</button><pre class="showElem" id="button83_pre"> 
+  for (auto pElement : children_) 
+  { 
+    if (dynamic_cast&lt;TaggedElement*&gt;(pElement.get()) != nullptr) 
+      return true; 
+  } 
+  return false; 
+</pre>} 
+//----&lt; add only one child to doc element using pointer to child &gt;----------- 
+bool DocElement::addChild(std::shared_ptr&lt;AbstractXmlElement&gt; pChild) 
+{<button onclick="myFunction(this)" id="button84">-</button><pre class="showElem" id="button84_pre"> 
+  // don't add TextElements 
+  TextElement* pTxEl = dynamic_cast&lt;TextElement*&gt;(pChild.get()); 
+  if (pTxEl != 0)  // don't add text elements to DocElement 
+    return false; 
+  // don't add another DocElement 
+  DocElement* pDcEl = dynamic_cast&lt;DocElement*&gt;(pChild.get()); 
+  if (pDcEl != 0)  // don't add text elements to DocElement 
+    return false; 
+  // add ProcInstrElements and CommentElements  
+  TaggedElement* te = dynamic_cast&lt;TaggedElement*&gt;(pChild.get()); 
+  if (te == nullptr) // is not a TaggedElement 
+  { 
+    children_.push_back(pChild); 
+    return true; 
+  } 
+  // add only one TaggedElement 
+  if (!hasXmlRoot()) 
+  { 
+    children_.push_back(pChild); 
+    return true; 
+  } 
+  return false; 
+</pre>} 
+//----&lt; remove child from doc element using pointer to child &gt;--------------- 
+bool DocElement::removeChild(std::shared_ptr&lt;AbstractXmlElement&gt; pChild) 
+{<button onclick="myFunction(this)" id="button85">-</button><pre class="showElem" id="button85_pre"> 
+  auto iter = std::find(begin(children_), end(children_), pChild); 
+  if (iter != end(children_)) 
+  { 
+    children_.erase(iter); 
+    return true; 
+  } 
+  return false; 
+</pre>} 
+//----&lt; return value = tag from doc element &gt;----------------------------- 
+std::string DocElement::value() { return std::string(""); } 
+//----&lt; generate xml string for tagged element &gt;----------------------------- 
+std::string DocElement::toString() 
+{<button onclick="myFunction(this)" id="button87">-</button><pre class="showElem" id="button87_pre"> 
+  std::string rtn; 
+  for (auto elem : children_) 
+    rtn += elem-&gt;toString(); 
+  return rtn; 
+</pre>} 
+///////////////////////////////////////////////////////////////////////////// 
+// TaggedElement methods 
+//----&lt; add child to tagged element using pointer to child &gt;----------------- 
+bool TaggedElement::addChild(std::shared_ptr&lt;AbstractXmlElement&gt; pChild) 
+{<button onclick="myFunction(this)" id="button88">-</button><pre class="showElem" id="button88_pre"> 
+  children_.push_back(pChild); 
+  return true; 
+</pre>} 
+//----&lt; remove child from tagged element using pointer to child &gt;------------ 
+bool TaggedElement::removeChild(std::shared_ptr&lt;AbstractXmlElement&gt; pChild) 
+{<button onclick="myFunction(this)" id="button89">-</button><pre class="showElem" id="button89_pre"> 
+  auto iter = std::find(begin(children_), end(children_), pChild); 
+  if (iter != end(children_)) 
+  { 
+    children_.erase(iter); 
+    return true; 
+  } 
+  return false; 
+</pre>} 
+//----&lt; add attribute to tagged element &gt;------------------------------------ 
+bool TaggedElement::addAttrib(const std::string& name, const std::string& value) 
+{<button onclick="myFunction(this)" id="button90">-</button><pre class="showElem" id="button90_pre"> 
+  std::pair&lt;std::string, std::string&gt; atPair(name, value); 
+  attribs_.push_back(atPair); 
+  return true; 
+</pre>} 
+//------&lt;get attribute from tagged element&gt;-------------- 
+std::string TaggedElement::getAttrib(const std::string& name) 
+{<button onclick="myFunction(this)" id="button91">-</button><pre class="showElem" id="button91_pre"> 
+	for (auto iter = begin(attribs_); iter != end(attribs_); ++iter) 
+	{ 
+		if (iter-&gt;first == name) 
+		{ 
+			return iter-&gt;second; 
+		} 
+	} 
+	return ""; 
+</pre>} 
+//----&lt; remove attribute from tagged element &gt;------------------------------- 
+bool TaggedElement::removeAttrib(const std::string& name) 
+{<button onclick="myFunction(this)" id="button92">-</button><pre class="showElem" id="button92_pre"> 
+  for (auto iter = begin(attribs_); iter != end(attribs_); ++iter) 
+  { 
+    if (iter-&gt;first == name) 
+    { 
+      attribs_.erase(iter); 
+      return true; 
+    } 
+  } 
+  return false; 
+</pre>} 
+//----&lt; return value = tag from tagged element &gt;----------------------------- 
+std::string TaggedElement::value() { return tag_; } 
+//----&lt; generate xml string for tagged element &gt;----------------------------- 
+std::string TaggedElement::toString() 
+{<button onclick="myFunction(this)" id="button94">-</button><pre class="showElem" id="button94_pre"> 
+  std::string spacer(tabSize*++count, ' '); 
+  std::string xml = "\n" + spacer + "&lt;" + tag_; 
+  for (auto at : attribs_) 
+  { 
+    xml += " "; 
+    xml += at.first; 
+    xml += "=\""; 
+    xml += at.second; 
+    xml += "\""; 
+  } 
+  xml += "&gt;"; 
+  for (auto pChild : children_) 
+    xml += pChild-&gt;toString(); 
+  xml += "\n" + spacer + "&lt;/" + tag_ + "&gt;"; 
+  --count; 
+  return xml; 
+</pre>} 
+///////////////////////////////////////////////////////////////////////////// 
+// TextElement methods 
+//----&lt; generate xml string for text element &gt;------------------------------- 
+std::string TextElement::toString() 
+{<button onclick="myFunction(this)" id="button95">-</button><pre class="showElem" id="button95_pre"> 
+  std::string spacer(tabSize * ++count, ' '); 
+  std::string xml = "\n" + spacer + text_; 
+  --count; 
+  return xml; 
+</pre>} 
+///////////////////////////////////////////////////////////////////////////// 
+// ProcInstrElement methods 
+//----&lt; add attribute to ProcInstElement &gt;----------------------------------- 
+bool ProcInstrElement::addAttrib(const std::string& name, const std::string& value) 
+{<button onclick="myFunction(this)" id="button96">-</button><pre class="showElem" id="button96_pre"> 
+  std::pair&lt;std::string, std::string&gt; atPair(name, value); 
+  attribs_.push_back(atPair); 
+  return true; 
+</pre>} 
+//------&lt;get attribute from tagged element&gt;-------------- 
+std::string ProcInstrElement::getAttrib(const std::string& name) 
+{<button onclick="myFunction(this)" id="button97">-</button><pre class="showElem" id="button97_pre"> 
+	for (auto iter = begin(attribs_); iter != end(attribs_); ++iter) 
+	{ 
+		if (iter-&gt;first == name) 
+		{ 
+			return iter-&gt;second; 
+		} 
+	} 
+	return ""; 
+</pre>} 
+//----&lt; remove attribute from ProcInstElement &gt;------------------------------ 
+bool ProcInstrElement::removeAttrib(const std::string& name) 
+{<button onclick="myFunction(this)" id="button98">-</button><pre class="showElem" id="button98_pre"> 
+  for (auto iter = begin(attribs_); iter != end(attribs_); ++iter) 
+  { 
+    if (iter-&gt;first == name) 
+    { 
+      attribs_.erase(iter); 
+      return true; 
+    } 
+  } 
+  return false; 
+</pre>} 
+//----&lt; generate xml string for ProcInstr element &gt;-------------------------- 
+std::string ProcInstrElement::toString() 
+{<button onclick="myFunction(this)" id="button99">-</button><pre class="showElem" id="button99_pre"> 
+  std::string spacer(tabSize*++count, ' '); 
+  std::string xml = "\n" + spacer + "&lt;" + "!"; 
+  for (auto at : attribs_) 
+  { 
+    xml += " "; 
+    xml += at.first; 
+    xml += "=\""; 
+    xml += at.second; 
+    xml += "\""; 
+  } 
+  xml += "!&gt;"; 
+  --count; 
+  return xml; 
+</pre>} 
+///////////////////////////////////////////////////////////////////////////// 
+// XmlDeclarElement methods 
+//----&lt; generate xml string for text element &gt;------------------------------- 
+std::string XmlDeclarElement::toString() 
+{<button onclick="myFunction(this)" id="button100">-</button><pre class="showElem" id="button100_pre"> 
+  std::string spacer(tabSize * ++count, ' '); 
+  std::string xml = "\n" + spacer + "&lt;?xml"; 
+  for (auto at : attribs_) 
+  { 
+    xml += " "; 
+    xml += at.first; 
+    xml += "=\""; 
+    xml += at.second; 
+    xml += "\""; 
+  } 
+  xml += " ?&gt;"; 
+  --count; 
+  return xml; 
+</pre>} 
+//----&lt; add attribute to ProcInstElement &gt;----------------------------------- 
+bool XmlDeclarElement::addAttrib(const std::string& name, const std::string& value) 
+{<button onclick="myFunction(this)" id="button101">-</button><pre class="showElem" id="button101_pre"> 
+  std::pair&lt;std::string, std::string&gt; atPair(name, value); 
+  attribs_.push_back(atPair); 
+  return true; 
+</pre>} 
+//------&lt;get attribute from tagged element&gt;-------------- 
+std::string XmlDeclarElement::getAttrib(const std::string& name) 
+{<button onclick="myFunction(this)" id="button102">-</button><pre class="showElem" id="button102_pre"> 
+	for (auto iter = begin(attribs_); iter != end(attribs_); ++iter) 
+	{ 
+		if (iter-&gt;first == name) 
+		{ 
+			return iter-&gt;second; 
+		} 
+	} 
+	return ""; 
+</pre>} 
+//----&lt; remove attribute from ProcInstElement &gt;------------------------------ 
+bool XmlDeclarElement::removeAttrib(const std::string& name) 
+{<button onclick="myFunction(this)" id="button103">-</button><pre class="showElem" id="button103_pre"> 
+  for (auto iter = begin(attribs_); iter != end(attribs_); ++iter) 
+  { 
+    if (iter-&gt;first == name) 
+    { 
+      attribs_.erase(iter); 
+      return true; 
+    } 
+  } 
+  return false; 
+</pre>} 
+///////////////////////////////////////////////////////////////////////////// 
+// CommentElement methods 
+//----&lt; generate xml string for ProcInstr element &gt;-------------------------- 
+std::string CommentElement::toString() 
+{<button onclick="myFunction(this)" id="button104">-</button><pre class="showElem" id="button104_pre"> 
+  std::string spacer(tabSize*++count, ' '); 
+  std::string xml = "\n" + spacer + "&lt;" + "!-- "; 
+  xml += commentText_; 
+  xml += " --&gt;"; 
+  --count; 
+  return xml; 
+</pre>} 
+///////////////////////////////////////////////////////////////////////////// 
+// Global Helper Methods 
+//----&lt; helper function displays titles &gt;------------------------------------ 
+void XmlProcessing::title(const std::string& title, char underlineChar) 
+{<button onclick="myFunction(this)" id="button105">-</button><pre class="showElem" id="button105_pre"> 
+  std::cout &lt;&lt; "\n  " &lt;&lt; title; 
+  std::cout &lt;&lt; "\n " &lt;&lt; std::string(title.size() + 2, underlineChar); 
+</pre>} 
+//----&lt; test stub &gt;---------------------------------------------------------- 
+#ifdef TEST_XMLELEMENT 
+int main() 
+{<button onclick="myFunction(this)" id="button106">-</button><pre class="showElem" id="button106_pre"> 
+  title("Testing XmlElement Package", '='); 
+  std::cout &lt;&lt; "\n"; 
+  using sPtr = std::shared_ptr &lt; AbstractXmlElement &gt; ; 
+  sPtr root = makeTaggedElement("root"); 
+  root-&gt;addChild(makeTextElement("this is a test")); 
+  sPtr child = makeTaggedElement("child"); 
+  child-&gt;addChild(makeTextElement("this is another test")); 
+  child-&gt;addAttrib("first", "test"); 
+  root-&gt;addChild(child); 
+  sPtr docEl = makeDocElement(root); 
+  std::cout &lt;&lt; "  " &lt;&lt; docEl-&gt;toString(); 
+  std::cout &lt;&lt; "\n\n"; 
+</pre>} 
+#endif 
+</pre>
+<script src="../JS/hideHandler.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!----------------------------------------------------------------------------
+   Test1.cpp.htm  -Published HTML File
+   Published on : 2017-05-04.22:35:50
+   Author:Karthik Palepally Muniyappa  
+----------------------------------------------------------------------------->
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h3>Test1.cpp</h3>
+<hr />
+<div class="indent">
+<h4>Dependencies:</h4>
+<ul>
+<li><a href="Test1.h.htm">Test1.h</a></li>
+</ul>
+</div>
+<hr />
+<pre>
+// Test1.cpp 
+ 
+#include "Test1.h" 
+#include &lt;iostream&gt; 
+#include &lt;sstream&gt; 
+ 
+Test::Test1::Test1() {} 
+ 
+Test::Test1::~Test1() {} 
+ 
+template&lt;typename T&gt; 
+std::string toString(const T& t) 
+{<button onclick="myFunction(this)" id="button58">-</button><pre class="showElem" id="button58_pre"> 
+  std::ostringstream out; 
+  out &lt;&lt; t; 
+  return out.str(); 
+</pre>} 
+ 
+using namespace Scanner; 
+ 
+#ifdef TEST_TEST1 
+ 
+int main() 
+{<button onclick="myFunction(this)" id="button59">-</button><pre class="showElem" id="button59_pre"> 
+  SemiExp se1; 
+  std::cout &lt;&lt; "\n  " &lt;&lt; toString&lt;size_t&gt;(se1.length()); 
+  std::cout &lt;&lt; "\n\n"; 
+</pre>} 
+#endif 
+</pre>
+<script src="hideHandler.js"></script>
+</body>
+</html>

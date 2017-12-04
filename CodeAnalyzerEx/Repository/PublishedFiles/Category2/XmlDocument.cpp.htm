@@ -1,0 +1,337 @@
+<!----------------------------------------------------------------------------
+   XmlDocument.cpp.htm  -Published HTML File
+   Published on : 2017-05-04.22:38:23
+   Author:Karthik Palepally Muniyappa  
+----------------------------------------------------------------------------->
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h3>XmlDocument.cpp</h3>
+<hr />
+<div class="indent">
+<h4>Dependencies:</h4>
+<ul>
+<li><a href="XmlElement.h.htm">XmlElement.h</a></li>
+<li><a href="XmlDocument.h.htm">XmlDocument.h</a></li>
+<li><a href="XmlParser.h.htm">XmlParser.h</a></li>
+<li><a href="Test1.cpp.htm">Test1.cpp</a></li>
+</ul>
+</div>
+<hr />
+<pre>
+/////////////////////////////////////////////////////////////////// 
+// XmlDocument.cpp - a container of XmlElement nodes             // 
+// Ver 2.2                                                       // 
+// Application: Help for CSE687 Pr#2, Spring 2015                // 
+// Platform:    Dell XPS 2720, Win 8.1 Pro, Visual Studio 2013   // 
+// Author:      Jim Fawcett, CST 4-187, 443-3948                 // 
+//              jfawcett@twcny.rr.com                            // 
+/////////////////////////////////////////////////////////////////// 
+ 
+#include &lt;iostream&gt; 
+#include &lt;functional&gt; 
+#include "XmlDocument.h" 
+#include "..\XmlParser\XmlParser.h" 
+#include "../Utilities/Utilities.h" 
+ 
+using namespace XmlProcessing; 
+using sPtr = std::shared_ptr &lt; AbstractXmlElement &gt; ; 
+ 
+///////////////////////////////////////////////////////////////////////////// 
+// Definitions of XmlDocument methods 
+ 
+XmlProcessing::XmlDocument::XmlDocument(const std::string& src, sourceType srcType) 
+{<button onclick="myFunction(this)" id="button87">-</button><pre class="showElem" id="button87_pre"> 
+  XmlParser parser(src, (XmlParser::sourceType) srcType); 
+  XmlDocument* pDoc = parser.buildDocument(); 
+  *this = std::move(*pDoc); 
+</pre>} 
+//----&lt; move constructor &gt;--------------------------------------------------- 
+ 
+XmlDocument::XmlDocument(XmlDocument&& doc) 
+{<button onclick="myFunction(this)" id="button88">-</button><pre class="showElem" id="button88_pre"> 
+  pDocElement_ = doc.pDocElement_; 
+  doc.pDocElement_ = nullptr; 
+</pre>} 
+//----&lt; move assignment &gt;---------------------------------------------------- 
+ 
+XmlDocument& XmlDocument::operator=(XmlDocument&& doc) 
+{<button onclick="myFunction(this)" id="button89">-</button><pre class="showElem" id="button89_pre"> 
+  if (&doc == this) return *this; 
+  pDocElement_ = doc.pDocElement_; 
+  doc.pDocElement_ = nullptr; 
+  return *this; 
+</pre>} 
+//----&lt; return std::shared_ptr to XML root &gt;--------------------------------- 
+ 
+sPtr XmlDocument::xmlRoot() 
+{<button onclick="myFunction(this)" id="button90">-</button><pre class="showElem" id="button90_pre"> 
+  for (auto pElem : pDocElement_-&gt;children()) 
+  { 
+    if (dynamic_cast&lt;TaggedElement*&gt;(pElem.get())) 
+      return pElem; 
+  } 
+  return nullptr; 
+</pre>} 
+//----&lt; add XML root to an XmlDocument &gt;------------------------------------- 
+ 
+bool XmlDocument::xmlRoot(sPtr pRoot) 
+{<button onclick="myFunction(this)" id="button91">-</button><pre class="showElem" id="button91_pre"> 
+  return pDocElement_-&gt;addChild(pRoot); 
+</pre>} 
+//----&lt; find element(s) with this tag &gt;-------------------------------------- 
+/* 
+ *  if tag == "" returns pElem and all decendents 
+ */ 
+bool XmlDocument::find(const std::string& tag, sPtr pElem, bool findall) 
+{<button onclick="myFunction(this)" id="button92">-</button><pre class="showElem" id="button92_pre"> 
+  if (pElem-&gt;tag() == tag || tag == "") 
+  { 
+    found_.push_back(pElem); 
+    if (!findall) 
+      return true; 
+  } 
+  for (auto pChild : pElem-&gt;children()) 
+    find(tag, pChild); 
+  return (found_.size() &gt; 0); 
+</pre>} 
+//----&lt; find element with this tag &gt;----------------------------------------- 
+/* 
+ *  found_[0] contains first element (DFS order) with tag, else empty 
+ */ 
+XmlDocument& XmlDocument::element(const std::string& tag) 
+{<button onclick="myFunction(this)" id="button93">-</button><pre class="showElem" id="button93_pre"> 
+  found_.clear(); 
+  find(tag, pDocElement_, false); 
+  return *this; 
+</pre>} 
+//----&lt; find children of element with this tag &gt;----------------------------- 
+/* 
+ * found_ contains all children found, else empty 
+ */ 
+XmlDocument& XmlDocument::elements(const std::string& tag) 
+{<button onclick="myFunction(this)" id="button94">-</button><pre class="showElem" id="button94_pre"> 
+  found_.clear(); 
+  element(tag); 
+  if (found_.size() &gt; 0) 
+  { 
+    sPtr pElem = found_[0]; 
+    found_.clear();                         // don't keep parent element 
+    for (auto pChild : pElem-&gt;children()) 
+      found_.push_back(pChild);             // save children 
+  } 
+  return *this; 
+</pre>} 
+//----&lt; find all decendents of last find with this tag &gt;--------------------- 
+/* 
+ *  returns all decendents if tag == "" 
+ */ 
+XmlDocument& XmlDocument::descendents(const std::string& tag) 
+{<button onclick="myFunction(this)" id="button95">-</button><pre class="showElem" id="button95_pre"> 
+  if (found_.size() == 0) 
+    found_.push_back(xmlRoot()); 
+  sPtr pElem = found_[0]; 
+  found_.clear(); 
+  for (auto pChild : pElem-&gt;children()) 
+    find(tag, pChild, true); 
+  return *this; 
+</pre>} 
+//----&lt; return found results &gt;----------------------------------------------- 
+ 
+std::vector&lt;sPtr&gt; XmlDocument::select() 
+{<button onclick="myFunction(this)" id="button96">-</button><pre class="showElem" id="button96_pre"> 
+  return std::move(found_);  // returns results and clears found_ 
+</pre>} 
+//----&lt; return the number of elements in the document &gt;---------------------- 
+ 
+size_t XmlDocument::size() 
+{<button onclick="myFunction(this)" id="button97">-</button><pre class="showElem" id="button97_pre"> 
+  find("", pDocElement_, true); 
+  size_t size_ = found_.size() - 1;  // don't count docElement 
+  found_.clear(); 
+  return size_; 
+</pre>} 
+//----&lt; return XML string representation of XmlDocument &gt;-------------------- 
+ 
+std::string XmlDocument::toString() 
+{<button onclick="myFunction(this)" id="button98">-</button><pre class="showElem" id="button98_pre"> 
+  return pDocElement_-&gt;toString(); 
+</pre>} 
+ 
+std::string enQuote(std::string s) { return "\"" + s + "\""; } 
+ 
+#ifdef TEST_XMLDOCUMENT 
+ 
+///////////////////////////////////////////////////////////////////////////// 
+// Test Functions 
+ 
+//----&lt; build an XmlDocument for testing &gt;----------------------------------- 
+ 
+XmlDocument buildDocument() 
+{<button onclick="myFunction(this)" id="button100">-</button><pre class="showElem" id="button100_pre"> 
+  sPtr pRoot = makeTaggedElement("root"); 
+  XmlDocument doc(XmlProcessing::makeDocElement(pRoot)); 
+ 
+  sPtr child1 = makeTaggedElement("child1"); 
+  child1-&gt;addChild(makeTextElement("child1 text")); 
+  sPtr grandChild11 = makeTaggedElement("grandChild11"); 
+  grandChild11-&gt;addChild(makeTextElement("grandchild11 text")); 
+  child1-&gt;addChild(grandChild11); 
+  pRoot-&gt;addChild(child1); 
+  sPtr secondChild1 = makeTaggedElement("child1"); 
+  secondChild1-&gt;addChild(makeTextElement("text of second child1")); 
+  child1-&gt;addChild(secondChild1); 
+ 
+  sPtr child2 = makeTaggedElement("child2"); 
+  child2-&gt;addChild(makeTextElement("child2 text")); 
+  pRoot-&gt;addChild(child2); 
+  return doc; 
+</pre>} 
+//----&lt; test Depth First Search on XmlDocument &gt;----------------------------- 
+ 
+void testDFS(XmlDocument& doc) 
+{<button onclick="myFunction(this)" id="button101">-</button><pre class="showElem" id="button101_pre"> 
+  title("testing global DFS on XmlDocument - printing tags"); 
+ 
+  std::function&lt;void(AbstractXmlElement&)&gt; f; 
+  f = [](AbstractXmlElement& Elem) {<button onclick="myFunction(this)" id="button102">-</button><pre class="showElem" id="button102_pre"> 
+    if (Elem.tag().size() &gt; 0) 
+</pre>      std::cout &lt;&lt; "\n  " &lt;&lt; Elem.tag(); 
+  }; 
+   
+  DFS(doc, f); 
+  std::cout &lt;&lt; "\n"; 
+</pre>} 
+//----&lt; test search for element with specified tag &gt;------------------------- 
+ 
+void testElement(XmlDocument& doc) 
+{<button onclick="myFunction(this)" id="button103">-</button><pre class="showElem" id="button103_pre"> 
+  std::string testTag = "child1"; 
+  title("testing element(" + enQuote(testTag) + ")"); 
+  std::vector&lt;sPtr&gt; found = doc.element(testTag).select(); 
+  if (found.size() &gt; 0) 
+    std::cout &lt;&lt; "\n  found " &lt;&lt; found[0]-&gt;tag(); 
+  else 
+    std::cout &lt;&lt; "\n  couldn't find " + enQuote(testTag); 
+  std::cout &lt;&lt; "\n"; 
+ 
+  testTag = "foobar"; 
+  title("testing element(" + enQuote(testTag) + ")"); 
+  found = doc.element(testTag).select(); 
+  if (found.size() &gt; 0) 
+    std::cout &lt;&lt; "\n  found " &lt;&lt; found[0]-&gt;tag(); 
+  else 
+    std::cout &lt;&lt; "\n  couldn't find " + enQuote(testTag); 
+  std::cout &lt;&lt; "\n"; 
+</pre>} 
+//----&lt; test search for children of element with specified tag &gt;------------- 
+ 
+void testElements(XmlDocument& doc) 
+{<button onclick="myFunction(this)" id="button104">-</button><pre class="showElem" id="button104_pre"> 
+  std::string testTag = "child1"; 
+  title("testing elements(" + enQuote(testTag) + ")"); 
+  std::vector&lt;sPtr&gt; found = doc.elements(testTag).select(); 
+  if (found.size() &gt; 0) 
+  { 
+    for (auto pElem : found) 
+    { 
+      if (pElem-&gt;tag() != "") 
+        std::cout &lt;&lt; "\n  found: " &lt;&lt; pElem-&gt;tag(); 
+      else 
+        std::cout &lt;&lt; "\n  found: " &lt;&lt; pElem-&gt;value(); 
+    } 
+  } 
+  else 
+    std::cout &lt;&lt; "\n  couldn't find child elements"; 
+  std::cout &lt;&lt; "\n"; 
+</pre>} 
+//----&lt; test search for all decendents of xmlRoot with specified tag &gt;------- 
+ 
+void testDescendents(XmlDocument& doc) 
+{<button onclick="myFunction(this)" id="button105">-</button><pre class="showElem" id="button105_pre"> 
+  std::string testTag = "child1"; 
+  title("testing doc.descendents(" + enQuote(testTag) + ")"); 
+  std::vector&lt;sPtr&gt; found = doc.descendents(testTag).select(); 
+  if (found.size() &gt; 0) 
+  { 
+    for (auto pElem : found) 
+    { 
+      if (pElem-&gt;tag() != "") 
+        std::cout &lt;&lt; "\n  found: " &lt;&lt; pElem-&gt;tag(); 
+      else 
+        std::cout &lt;&lt; "\n  found: " &lt;&lt; pElem-&gt;value(); 
+    } 
+  } 
+  else 
+    std::cout &lt;&lt; "\n  couldn't find descendent elements"; 
+  std::cout &lt;&lt; "\n"; 
+</pre>} 
+//----&lt; test search for all decendents of specified element &gt;---------------- 
+ 
+void testElementDescendents(XmlDocument& doc) 
+{<button onclick="myFunction(this)" id="button106">-</button><pre class="showElem" id="button106_pre"> 
+  std::string testTag = "child1"; 
+  title("testing doc.element(" + testTag + ").descendents()"); 
+  std::vector&lt;sPtr&gt; found = doc.element(testTag).descendents().select(); 
+  if (found.size() &gt; 0) 
+  { 
+    for (auto pElem : found) 
+    { 
+      if (pElem-&gt;tag() != "") 
+        std::cout &lt;&lt; "\n  found: " &lt;&lt; pElem-&gt;tag(); 
+      else 
+        std::cout &lt;&lt; "\n  found: " &lt;&lt; pElem-&gt;value(); 
+    } 
+  } 
+  else 
+    std::cout &lt;&lt; "\n  couldn't find descendent elements"; 
+  std::cout &lt;&lt; "\n"; 
+</pre>} 
+//----&lt; test stub &gt;---------------------------------------------------------- 
+ 
+int main() 
+{<button onclick="myFunction(this)" id="button107">-</button><pre class="showElem" id="button107_pre"> 
+  title("Testing XmlDocument class"); 
+   
+  XmlDocument doc = buildDocument(); 
+  std::cout &lt;&lt; doc.toString(); 
+  std::cout &lt;&lt; "\n"; 
+  std::cout &lt;&lt; "\n  size of document = " &lt;&lt; doc.size() &lt;&lt; "\n"; 
+ 
+  title("Testing XmlDocument::DFS - looking for tags"); 
+  std::function&lt;void(AbstractXmlElement&)&gt; f; 
+  f = [](AbstractXmlElement& Elem) {<button onclick="myFunction(this)" id="button108">-</button><pre class="showElem" id="button108_pre"> 
+    if (Elem.tag().size() &gt; 0) 
+</pre>      std::cout &lt;&lt; "\n  " &lt;&lt; Elem.tag(); 
+  }; 
+  doc.DFS(doc.xmlRoot(), f); 
+  std::cout &lt;&lt; "\n"; 
+    
+  testDFS(doc); 
+  testElement(doc); 
+  testElements(doc); 
+  testDescendents(doc); 
+  testElementDescendents(doc); 
+ 
+  std::string path = "../XmlElementParts/LectureNote.xml"; 
+  title("Attempting to build document from fileSpec: " + path); 
+ 
+  try 
+  { 
+    XmlDocument doc2(path, XmlDocument::file); 
+    std::cout &lt;&lt; doc2.toString(); 
+  } 
+  catch (std::exception& ex) 
+  { 
+    std::cout &lt;&lt; "\n\n  " &lt;&lt; ex.what(); 
+  } 
+  std::cout &lt;&lt; "\n\n"; 
+</pre>} 
+ 
+#endif 
+</pre>
+<script src="hideHandler.js"></script>
+</body>
+</html>
